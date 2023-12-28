@@ -1,6 +1,7 @@
 package com.example.consumerestapi.ui.home.screen
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -31,14 +33,24 @@ import com.example.consumerestapi.model.Kontak
 import com.example.consumerestapi.ui.home.viewmodel.KontakUIState
 
 @Composable
-fun HomeScreen(
-    kontakUIState: KontakUIState, retryAction: () -> Unit, modifier: Modifier = Modifier
+fun HomeStatus(
+    kontakUIState: KontakUIState,
+    retryAction: () -> Unit,
+    modifier: Modifier = Modifier,
+    onDeleteClick: (Kontak) -> Unit = {},
+    onDetailClick: (Int) -> Unit
 ){
     when (kontakUIState){
         is KontakUIState.Loading -> OnLoading(modifier = modifier.fillMaxSize())
         is KontakUIState.Success -> KontakLayout(
             kontak = kontakUIState.kontak,
-            modifier = modifier.fillMaxWidth()
+            modifier = modifier.fillMaxWidth(),
+            onDetailClick = {
+                onDetailClick(it.id)
+            },
+            onDeleteClick = {
+                onDeleteClick(it)
+            }
         )
         is KontakUIState.Error -> OnError(retryAction, modifier = modifier.fillMaxSize())
     }
@@ -73,14 +85,24 @@ fun OnLoading(modifier: Modifier = Modifier){
 @Composable
 fun KontakLayout(
     kontak : List<Kontak>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onDetailClick: (Kontak) -> Unit,
+    onDeleteClick: (Kontak) -> Unit = {}
 ){
     LazyColumn(
         modifier = modifier,
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)){
         items(kontak){kontak ->
-            KontakCard(kontak = kontak, modifier = Modifier.fillMaxWidth())
+            KontakCard(
+                kontak = kontak,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onDetailClick(kontak) },
+                onDeleteClick = {
+                    onDeleteClick(kontak)
+                }
+            )
         }
     }
 }
@@ -88,6 +110,7 @@ fun KontakLayout(
 @Composable
 fun KontakCard(
     kontak: Kontak,
+    onDeleteClick: (Kontak) -> Unit = {},
     modifier: Modifier = Modifier
 ){
     Card(
@@ -108,7 +131,7 @@ fun KontakCard(
                 )
                 Spacer(Modifier.weight(1f))
                 Icon(
-                    imageVector = Icons.Default.Phone,
+                    imageVector = Icons.Default.Delete,
                     contentDescription = null,
                 )
                 Text(
